@@ -68,6 +68,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
 
     // CameraX core library using the camera2 implementation
     val camerax_version = "1.4.0-alpha02"

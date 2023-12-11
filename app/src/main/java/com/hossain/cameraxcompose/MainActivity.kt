@@ -1,6 +1,7 @@
 package com.hossain.cameraxcompose
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -13,8 +14,12 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
+import androidx.camera.video.FileOutputOptions
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
+import androidx.camera.view.video.AudioConfig
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -26,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,8 +48,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import java.io.File
 
 class MainActivity : ComponentActivity() {
+    private var recording: Recording? = null
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -135,6 +143,61 @@ class MainActivity : ComponentActivity() {
                                 imageVector = Icons.Default.PhotoCamera,
                                 contentDescription = "Take photo"
                             )
+                        }
+                        IconButton(
+                            onClick = {
+                                recordVideo(cameraController)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Videocam,
+                                contentDescription = "Record video"
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun recordVideo(controller: LifecycleCameraController) {
+        if(recording != null) {
+            recording?.stop()
+            recording = null
+            return
+        }
+        if(!hasPermission()){
+            return
+        }else {
+            Toast.makeText(
+                applicationContext,
+                "Video recording started",
+                Toast.LENGTH_SHORT
+            ).show()
+            val outputFile = File(filesDir, "my-recording.mp4")
+            recording = controller.startRecording(
+                FileOutputOptions.Builder(outputFile).build(),
+                AudioConfig.create(true),
+                ContextCompat.getMainExecutor(applicationContext)
+            ){event ->
+                when(event) {
+                    is VideoRecordEvent.Finalize -> {
+                        if(event.hasError()) {
+                            recording?.close()
+                            recording = null
+
+                            Toast.makeText(
+                                applicationContext,
+                                "Video capture failed",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }else {
+                            Toast.makeText(
+                                applicationContext,
+                                "Video capture succeeded",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }

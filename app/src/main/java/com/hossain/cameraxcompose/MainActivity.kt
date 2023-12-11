@@ -146,6 +146,9 @@ class MainActivity : ComponentActivity() {
         controller: LifecycleCameraController,
         onPhotoClicked: (Bitmap) -> Unit
     ) {
+        if(!hasPermission()) {
+            return
+        }
         controller.takePicture(
             ContextCompat.getMainExecutor(applicationContext),
             object : OnImageCapturedCallback() {
